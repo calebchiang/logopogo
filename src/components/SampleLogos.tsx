@@ -2,12 +2,14 @@
 
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { DollarSign } from 'lucide-react'
 
 export default function SampleLogos() {
   return (
     <section className="mx-auto max-w-5xl py-2 text-center mb-8">
-      <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-        Design clean and modern logos for your brand today
+       <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-semibold tracking-tight">
+        <DollarSign className="w-7 h-7 text-green-500" />
+        Save thousands on professional logos
       </h2>
 
       <div className="mt-8 inline-grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-10">

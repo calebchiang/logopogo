@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="flex items-start gap-3 text-zinc-200">
           <Image
-            src="/logopogo_logo_transparent.png"
+            src="/logopogo_logo.png"
             alt="LogoPogo Logo"
             width={40}
             height={40}
