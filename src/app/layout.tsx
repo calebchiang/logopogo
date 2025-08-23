@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: "LogoPogo",
     images: [
       {
-        url: "/logopogo_logo.png",
+        url: "/logopogo_logo_transparent.png",
         width: 512,
         height: 512,
         alt: "LogoPogo",
@@ -52,8 +52,8 @@ export const metadata: Metadata = {
     icon: [
       { url: "/logopogo_logo_transparent.png", sizes: "256x256", type: "image/png" },
     ],
-    apple: [{ url: "/logopogo_logo.png", sizes: "180x180", type: "image/png" }],
-    shortcut: ["/logopogo_logo.png"],
+    apple: [{ url: "/logopogo_logo_transparent.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/logopogo_logo_transparent.png"],
   },
   alternates: { canonical: "/" },
 };

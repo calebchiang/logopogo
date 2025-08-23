@@ -7,7 +7,7 @@ import { DollarSign } from 'lucide-react'
 export default function SampleLogos() {
   return (
     <section className="mx-auto max-w-5xl py-2 text-center mb-8">
-       <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-semibold tracking-tight">
+      <h2 className="flex items-center justify-center gap-2 text-2xl md:text-3xl font-semibold tracking-tight">
         <DollarSign className="w-7 h-7 text-green-500" />
         Save thousands on professional logos
       </h2>
@@ -21,7 +21,7 @@ export default function SampleLogos() {
             transition={{
               duration: 0.4,
               ease: 'easeOut',
-              delay: i * 0.08, 
+              delay: i * 0.08,
             }}
             className="rounded-xl"
           >

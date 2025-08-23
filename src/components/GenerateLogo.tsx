@@ -1,3 +1,4 @@
+// components/GenerateLogo.tsx
 'use client'
 
 import { useState, useRef } from 'react'
@@ -12,13 +13,17 @@ type GenResponse = {
   prompt: string
 }
 
-export default function GenerateLogo() {
+type Props = {
+  step: 0 | 1 | 2
+  onStepChange: (s: 0 | 1 | 2) => void
+}
+
+export default function GenerateLogo({ step, onStepChange }: Props) {
   const [brand, setBrand] = useState('')
   const [description, setDescription] = useState('')
   const [palette, setPalette] = useState('')
   const [symbol, setSymbol] = useState('')
 
-  const [step, setStep] = useState<0 | 1 | 2>(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
@@ -32,15 +37,17 @@ export default function GenerateLogo() {
   const ensureSessionReady = async (maxMs = 4000) => {
     const start = Date.now()
     while (Date.now() - start < maxMs) {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (session) return true
-      await new Promise(r => setTimeout(r, 200))
+      await new Promise((r) => setTimeout(r, 200))
     }
     return false
   }
 
-  const next = () => setStep((s) => (Math.min(s + 1, 2) as typeof step))
-  const back = () => setStep((s) => (Math.max(s - 1, 0) as typeof step))
+  const next = () => onStepChange(Math.min(step + 1, 2) as Props['step'])
+  const back = () => onStepChange(Math.max(step - 1, 0) as Props['step'])
 
   const handleSubmit = async () => {
     setError(null)
@@ -112,7 +119,7 @@ export default function GenerateLogo() {
   }
 
   const selectedPaletteId = (() => {
-    const found = palettes.find(p => p.colors.join(', ') === palette)
+    const found = palettes.find((p) => p.colors.join(', ') === palette)
     return found?.id
   })()
 
@@ -123,11 +130,7 @@ export default function GenerateLogo() {
       {step === 0 && (
         <section className="text-center mb-2">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-            Generate{' '}
-            <span className="rainbow-purple">
-              High Quality
-            </span>{' '}
-            Logos in Seconds
+            Generate <span className="rainbow-purple">High Quality</span> Logos in Seconds
           </h1>
           <p className="mt-3 text-zinc-400 text-lg">
             Use LogoPogo&apos;s AI powered platform to design a logo for your apps and websites
@@ -166,14 +169,10 @@ export default function GenerateLogo() {
         {step === 1 && (
           <div className="grid gap-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-zinc-300 text-left">
-                Colour Palette
-              </label>
+              <label className="block text-sm font-medium text-zinc-300 text-left">Colour Palette</label>
               <span className="text-xs text-zinc-500">Step 2 of 3</span>
             </div>
-            <p className="text-sm text-zinc-500">
-              Select one palette. You can customize later.
-            </p>
+            <p className="text-sm text-zinc-500">Select one palette. You can customize later.</p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {palettes.map((p) => {
@@ -183,9 +182,15 @@ export default function GenerateLogo() {
                     key={p.id}
                     type="button"
                     onClick={() => setPalette(p.colors.join(', '))}
-                    className={`w-full rounded-2xl transition focus:outline-none ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
+                    className={`w-full rounded-2xl transition focus:outline-none ${
+                      isSelected ? 'ring-2 ring-indigo-500' : ''
+                    }`}
                   >
-                    <Card className={`h-30 w-full rounded-2xl border-zinc-800 shadow-sm overflow-hidden p-0 ${isSelected ? 'border-indigo-500' : ''}`}>
+                    <Card
+                      className={`h-30 w-full rounded-2xl border-zinc-800 shadow-sm overflow-hidden p-0 ${
+                        isSelected ? 'border-indigo-500' : ''
+                      }`}
+                    >
                       <CardContent className="p-0 h-full">
                         <div className="grid grid-cols-4 h-full w-full">
                           {p.colors.map((c, i) => (
@@ -200,10 +205,7 @@ export default function GenerateLogo() {
             </div>
 
             <div className="flex items-center justify-between mt-2">
-              <button
-                onClick={back}
-                className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900"
-              >
+              <button onClick={back} className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900">
                 Back
               </button>
               <button
@@ -228,7 +230,9 @@ export default function GenerateLogo() {
               rows={3}
               required
             />
-            <label className="block text-sm font-medium text-zinc-300 text-left">Brief Description <span className="text-zinc-500">(optional)</span></label>
+            <label className="block text-sm font-medium text-zinc-300 text-left">
+              Brief Description <span className="text-zinc-500">(optional)</span>
+            </label>
             <input
               type="text"
               value={description}
@@ -237,10 +241,7 @@ export default function GenerateLogo() {
               placeholder="What does your business do?"
             />
             <div className="flex items-center justify-between mt-2">
-              <button
-                onClick={back}
-                className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900"
-              >
+              <button onClick={back} className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900">
                 Back
               </button>
               <button

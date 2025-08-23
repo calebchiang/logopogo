@@ -47,7 +47,8 @@ function buildPrompt(
     `OUTPUT REQUIREMENTS:
 - Return a single centered icon on a fully transparent background (PNG with alpha).
 - The canvas background must be 100% transparent (alpha=0). Do NOT fill the canvas with any solid or gradient color.
-- No borders, frames, canvases, or mockup surfaces.`,
+- No borders, frames, canvases, or mockup surfaces.
+- DO NOT include any elements in the logo that is not specified by the ${symbol}`,
 
     `BACKGROUND ELEMENTS:
 - Do not add scenes/backgrounds by default.
