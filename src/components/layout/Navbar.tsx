@@ -1,14 +1,16 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Coins, CircleUser } from 'lucide-react'
+import { Coins, CircleUser, Clock } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import AuthModal from '@/components/AuthModal'
@@ -101,15 +103,30 @@ export default function Navbar() {
                     aria-label="User menu"
                     className="inline-flex items-center justify-center"
                   >
-                    <CircleUser className="h-8 w-8" />
+                    <CircleUser className="h-8 w-8 cursor-pointer" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[220px] space-y-2">
+                <DropdownMenuContent align="end" className="min-w-[240px] space-y-1">
                   {email && (
-                    <div className="px-2 pt-2 text-sm text-zinc-400">
-                      Email: <span className="text-zinc-400">{email}</span>
+                    <div className="px-2 pt-2 pb-1 text-sm text-zinc-400">
+                      Email: <span className="text-zinc-300">{email}</span>
                     </div>
                   )}
+
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/recent"
+                      className="flex items-center gap-2 cursor-pointer"
+                      aria-label="Recently generated logos"
+                      title="Recently generated logos"
+                    >
+                      <Clock className="h-4 w-4" />
+                      <span>Recently generated logos</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
                   <DropdownMenuItem onClick={logout} className="text-red-500">
                     Log out
                   </DropdownMenuItem>

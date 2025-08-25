@@ -1,4 +1,3 @@
-// components/GenerateLogo.tsx
 'use client'
 
 import { useState, useRef } from 'react'
@@ -6,11 +5,24 @@ import { Card, CardContent } from '@/components/ui/card'
 import AuthModal from '@/components/AuthModal'
 import { palettes } from '@/lib/palettes'
 import { createClient } from '@/lib/supabase/client'
+import { Download, Edit } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+type LogoRow = {
+  id: string
+  image_path: string
+  url: string
+  brand_name?: string
+  symbol_description?: string
+  palette?: string[] | null
+  business_description?: string | null
+  created_at?: string
+}
 
 type GenResponse = {
-  images: string[]
   model: string
   prompt: string
+  logos: LogoRow[]
 }
 
 type Props = {
@@ -23,10 +35,11 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
   const [description, setDescription] = useState('')
   const [palette, setPalette] = useState('')
   const [symbol, setSymbol] = useState('')
+  const router = useRouter()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [images, setImages] = useState<string[]>([])
+  const [logos, setLogos] = useState<LogoRow[]>([])
 
   const [showAuth, setShowAuth] = useState(false)
   const [pendingAfterAuth, setPendingAfterAuth] = useState(false)
@@ -51,7 +64,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
 
   const handleSubmit = async () => {
     setError(null)
-    setImages([])
+    setLogos([])
     setLoading(true)
 
     try {
@@ -90,7 +103,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       }
 
       const json: GenResponse = await res.json()
-      setImages(json.images)
+      setLogos(json.logos || [])
     } catch (err: any) {
       setError(err?.message || 'Something went wrong')
     } finally {
@@ -182,14 +195,10 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
                     key={p.id}
                     type="button"
                     onClick={() => setPalette(p.colors.join(', '))}
-                    className={`w-full rounded-2xl transition focus:outline-none ${
-                      isSelected ? 'ring-2 ring-indigo-500' : ''
-                    }`}
+                    className={`w-full rounded-2xl transition focus:outline-none ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
                   >
                     <Card
-                      className={`h-30 w-full rounded-2xl border-zinc-800 shadow-sm overflow-hidden p-0 ${
-                        isSelected ? 'border-indigo-500' : ''
-                      }`}
+                      className={`h-30 w-full rounded-2xl border-zinc-800 shadow-sm overflow-hidden p-0 ${isSelected ? 'border-indigo-500' : ''}`}
                     >
                       <CardContent className="p-0 h-full">
                         <div className="grid grid-cols-4 h-full w-full">
@@ -257,32 +266,40 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
         )}
       </div>
 
-      {images.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-xl font-semibold mb-4">Results</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {images.map((img, i) => {
-              const src = /^https?:\/\//i.test(img) ? img : `data:image/png;base64,${img}`
-              return (
-                <div key={i} className="border border-zinc-800 rounded-lg p-4">
-                  <div className="aspect-square w-full">
-                    <img src={src} alt={`logo-${i + 1}`} className="w-full h-full object-contain" />
-                  </div>
-                  <a
-                    href={src}
-                    download={`logopogo_${i + 1}.png`}
-                    className="text-xs underline mt-3 inline-block"
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Download PNG
-                  </a>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      {logos.length > 0 && (
+      <section className="mt-12">
+        <h2 className="text-xl font-semibold mb-4">Results</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {logos.map((l, i) => (
+            <div key={l.id} className="border border-zinc-800 rounded-lg p-4">
+              <div className="aspect-square w-full">
+                <img src={l.url} alt={`logo-${i + 1}`} className="w-full h-full object-contain" />
+              </div>
+              <div className="flex items-center gap-4 mt-3 text-zinc-600">
+                <a
+                  href={l.url}
+                  download={`logopogo_${i + 1}.png`}
+                  rel="noreferrer"
+                  target="_blank"
+                  className="flex items-center gap-1 hover:text-white transition-colors"
+                  title="Download PNG"
+                >
+                  <Download className="w-4 h-4 text-zinc-400 cursor-pointer" />
+                </a>
+
+                <button
+                  onClick={() => router.push(`/editor/${l.id}`)}
+                  className="flex items-center gap-1 hover:text-white transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4 text-zinc-400 cursor-pointer" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
     </div>
   )
 }
