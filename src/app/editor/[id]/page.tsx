@@ -1,15 +1,15 @@
 import { createClient } from "@/lib/supabase/server"
 
-type Props = {
-  params: { id: string }
-}
+type RouteParams = { id: string }
 
-export default async function EditorPage({ params }: Props) {
+export default async function EditorPage({ params }: { params: Promise<RouteParams> }) {
+  const { id } = await params
+
   const supabase = await createClient()
   const { data: logo, error } = await supabase
     .from("logos")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single()
 
   if (error || !logo) {
@@ -26,7 +26,7 @@ export default async function EditorPage({ params }: Props) {
     <div className="p-8 flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-4">Editor for {logo.brand_name}</h1>
       {url ? (
-        <img src={url} alt={logo.brand_name} className="max-w-md border rounded-lg" />
+        <img src={url} alt={logo.brand_name ?? "Logo"} className="max-w-md border rounded-lg" />
       ) : (
         <p className="text-red-500">No image found</p>
       )}
