@@ -95,7 +95,8 @@ export async function generateLogos({
     description
   );
 
-  const n = 4;
+  // number of images generated
+  const n = 2;
 
   const result = await openai.images.generate({
     model: MODEL,

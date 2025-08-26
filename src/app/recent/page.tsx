@@ -134,7 +134,7 @@ export default function RecentPage() {
                     title="Download PNG"
                     aria-label="Download PNG"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4 cursor-pointer" />
                   </a>
 
                   <button
@@ -143,7 +143,7 @@ export default function RecentPage() {
                     title="Edit"
                     aria-label="Edit"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 cursor-pointer" />
                   </button>
 
                   <DropdownMenu>
@@ -154,7 +154,7 @@ export default function RecentPage() {
                         aria-label="More options"
                         disabled={deletingId === l.id}
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4 cursor-pointer" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-[180px]">
