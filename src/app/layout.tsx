@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { FONT_OPTIONS } from "@/lib/fonts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,26 +50,43 @@ export const metadata: Metadata = {
   },
   themeColor: "#18181b",
   icons: {
-    icon: [
-      { url: "/logopogo_logo_transparent.png", sizes: "256x256", type: "image/png" },
-    ],
+    icon: [{ url: "/logopogo_logo_transparent.png", sizes: "256x256", type: "image/png" }],
     apple: [{ url: "/logopogo_logo_transparent.png", sizes: "180x180", type: "image/png" }],
     shortcut: ["/logopogo_logo_transparent.png"],
   },
   alternates: { canonical: "/" },
 };
 
+function FontPreloader() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        width: 0,
+        height: 0,
+        overflow: "hidden",
+        opacity: 0,
+        pointerEvents: "none",
+      }}
+    >
+      {FONT_OPTIONS.filter(f => !!f.className).map(f => (
+        <span key={f.id} className={f.className}>Aa</span>
+      ))}
+    </div>
+  );
+}
+
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Navbar />
         {children}
         <Footer />
+        <FontPreloader />
       </body>
     </html>
   );
