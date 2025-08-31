@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import {
-  Stage,
-  Layer,
-  Image as KonvaImage,
-  Transformer,
-  Rect,
-  Text as KonvaText,
-} from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Transformer, Rect, Text as KonvaText } from "react-konva";
 import useImage from "use-image";
 
 type TextLayer = {
@@ -49,7 +42,8 @@ type Props = {
 };
 
 export type EditorHandle = {
-  capturePreview: () => Promise<string | null>;
+  capturePreview: (opts?: { transparent?: boolean }) => Promise<string | null>;
+  captureDownload: (opts?: { transparent?: boolean }) => Promise<string | null>;
 };
 
 export default forwardRef<EditorHandle, Props>(function Editor(
@@ -75,6 +69,7 @@ export default forwardRef<EditorHandle, Props>(function Editor(
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<any>(null);
+  const bgRectRef = useRef<any>(null);
   const imageNodeRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
   const textNodeRefs = useRef<Record<string, any>>({});
@@ -89,7 +84,6 @@ export default forwardRef<EditorHandle, Props>(function Editor(
   });
 
   const [textDims, setTextDims] = useState<Record<string, { w: number; h: number }>>({});
-
   const [editId, setEditId] = useState<string | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
@@ -122,12 +116,7 @@ export default forwardRef<EditorHandle, Props>(function Editor(
     const ih = img.height || 1;
     const margin = 0.8;
     const scale = Math.min((w * margin) / iw, (h * margin) / ih);
-    const centered = {
-      x: w / 2,
-      y: h / 2,
-      scaleX: scale,
-      scaleY: scale,
-    };
+    const centered = { x: w / 2, y: h / 2, scaleX: scale, scaleY: scale };
     setImgState(centered);
     onImageTransform?.(centered);
   }, [img, imgStatus, stageSize, imageX, imageY, imageScaleX, imageScaleY, onImageTransform]);
@@ -221,7 +210,8 @@ export default forwardRef<EditorHandle, Props>(function Editor(
         const text = el.innerText;
         onChangeText(editId, { html, text });
         const sel2 = window.getSelection();
-        savedRangeRef.current = sel2 && sel2.rangeCount ? sel2.getRangeAt(0).cloneRange() : savedRangeRef.current;
+        savedRangeRef.current =
+          sel2 && sel2.rangeCount ? sel2.getRangeAt(0).cloneRange() : savedRangeRef.current;
         return;
       }
       if (selectedId && selectedId !== "image") {
@@ -259,15 +249,6 @@ export default forwardRef<EditorHandle, Props>(function Editor(
     setEditId(id);
   };
 
-  const endEdit = () => {
-    setEditId(null);
-  };
-
-  const editingLayer = editId ? textLayers.find((t) => t.id === editId) : undefined;
-  const editDims = editingLayer ? textDims[editingLayer.id] : undefined;
-  const overlayLeft = editingLayer ? editingLayer.x - (editDims?.w || 0) / 2 : 0;
-  const overlayTop = editingLayer ? editingLayer.y - (editDims?.h || 0) / 2 : 0;
-
   const handleEditableInput = () => {
     if (!editId) return;
     const el = editableRef.current;
@@ -280,7 +261,7 @@ export default forwardRef<EditorHandle, Props>(function Editor(
   const waitFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
   useImperativeHandle(ref, () => ({
-    async capturePreview() {
+    async capturePreview(opts?: { transparent?: boolean }) {
       if (!stageRef.current) return null;
       if (imageUrl && imgStatus !== "loaded") return null;
 
@@ -299,19 +280,80 @@ export default forwardRef<EditorHandle, Props>(function Editor(
         tr.getLayer()?.draw();
       }
 
+      let bgWasVisible: boolean | undefined;
+      if (opts?.transparent && bgRectRef.current) {
+        bgWasVisible = bgRectRef.current.visible();
+        bgRectRef.current.visible(false);
+        bgRectRef.current.getLayer()?.draw();
+      }
+
       await waitFrame();
       const uri = stageRef.current.toDataURL({ pixelRatio: 1, mimeType: "image/png" });
+
+      if (opts?.transparent && bgRectRef.current) {
+        bgRectRef.current.visible(bgWasVisible ?? true);
+        bgRectRef.current.getLayer()?.draw();
+      }
 
       if (tr) {
         tr.nodes(prevNodes);
         tr.getLayer()?.draw();
       }
+      if (prevEditId) setEditId(prevEditId);
+
+      return uri || null;
+    },
+
+    async captureDownload(opts?: { transparent?: boolean }) {
+      if (!stageRef.current) return null;
+      if (imageUrl && imgStatus !== "loaded") return null;
+
+      const prevEditId = editId;
       if (prevEditId) {
-        setEditId(prevEditId);
+        handleEditableInput();
+        setEditId(null);
+        await waitFrame();
       }
+
+      const tr = transformerRef.current as any | null;
+      let prevNodes: any[] = [];
+      if (tr) {
+        prevNodes = tr.nodes();
+        tr.nodes([]);
+        tr.getLayer()?.draw();
+      }
+
+      let bgWasVisible: boolean | undefined;
+      if (opts?.transparent && bgRectRef.current) {
+        bgWasVisible = bgRectRef.current.visible();
+        bgRectRef.current.visible(false);
+        bgRectRef.current.getLayer()?.draw();
+      }
+
+      await waitFrame();
+      const stageW = stageRef.current.width() || 1;
+      const pixelRatio = Math.max(1, 1024 / stageW);
+      const uri = stageRef.current.toDataURL({ mimeType: "image/png", pixelRatio });
+
+      if (opts?.transparent && bgRectRef.current) {
+        bgRectRef.current.visible(bgWasVisible ?? true);
+        bgRectRef.current.getLayer()?.draw();
+      }
+
+      if (tr) {
+        tr.nodes(prevNodes);
+        tr.getLayer()?.draw();
+      }
+      if (prevEditId) setEditId(prevEditId);
+
       return uri || null;
     },
   }));
+
+  const editingLayer = editId ? textLayers.find((t) => t.id === editId) : undefined;
+  const editDims = editingLayer ? textDims[editingLayer.id] : undefined;
+  const overlayLeft = editingLayer ? editingLayer.x - (editDims?.w || 0) / 2 : 0;
+  const overlayTop = editingLayer ? editingLayer.y - (editDims?.h || 0) / 2 : 0;
 
   return (
     <div className="w-fit">
@@ -325,7 +367,15 @@ export default forwardRef<EditorHandle, Props>(function Editor(
           className="rounded-lg bg-[var(--background)]"
         >
           <Layer>
-            <Rect x={0} y={0} width={stageSize.w} height={stageSize.h} fill={bgColor} listening={false} />
+            <Rect
+              ref={bgRectRef}
+              x={0}
+              y={0}
+              width={stageSize.w}
+              height={stageSize.h}
+              fill={bgColor}
+              listening={false}
+            />
 
             {img && (
               <KonvaImage

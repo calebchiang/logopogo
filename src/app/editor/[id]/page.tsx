@@ -329,12 +329,14 @@ export default function EditorPage() {
     setDirty(false);
   };
 
-  const onDownload = async () => {
-    const uri = await editorRef.current?.capturePreview();
+  const onDownload = async ({ transparent }: { transparent: boolean }) => {
+    const uri = await editorRef.current?.captureDownload({ transparent });
     if (!uri) return;
     const a = document.createElement("a");
     a.href = uri;
-    a.download = `${logo?.brand_name || "logo"}-${logo?.id || "download"}.png`;
+    const rawName = (logo?.brand_name ?? "logo").trim() || "logo";
+    const safeName = rawName.replace(/[^a-z0-9 _-]/gi, "").replace(/\s+/g, "-");
+    a.download = `${safeName}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();

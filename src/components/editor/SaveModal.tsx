@@ -69,7 +69,7 @@ export default function SaveModal({ open, onOpenChange, onSave, confirmHref }: P
             disabled={loading}
             className="bg-emerald-600 hover:bg-emerald-500 text-white"
           >
-            {loading ? 'Saving…' : 'Save & Leave'}
+            {loading ? 'Saving…' : 'Save'}
           </Button>
         </DialogFooter>
       </DialogContent>
