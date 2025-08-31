@@ -114,7 +114,7 @@ export default function Navbar() {
                   )}
 
                   <DropdownMenuItem asChild>
-                    <Link
+                    <a
                       href="/recent"
                       className="flex items-center gap-2 cursor-pointer"
                       aria-label="Recently generated logos"
@@ -122,9 +122,8 @@ export default function Navbar() {
                     >
                       <Clock className="h-4 w-4" />
                       <span>Recently generated logos</span>
-                    </Link>
+                    </a>
                   </DropdownMenuItem>
-
                   <DropdownMenuSeparator />
 
                   <DropdownMenuItem onClick={logout} className="text-red-500">

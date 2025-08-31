@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download } from "lucide-react";
+import { Download, Save } from "lucide-react";
 
 type FontOption = { name: string; cssFamily: string };
 
@@ -22,6 +22,7 @@ type EditorSidebarProps = {
   onChangeRotationDeg: (deg: number) => void;
   onChangeOpacityPct: (pct: number) => void;
   onDownload?: () => void;
+  onSave?: () => Promise<void> | void;
 };
 
 const SOLID_COLORS = [
@@ -108,10 +109,12 @@ export default function EditorSidebar({
   onChangeRotationDeg,
   onChangeOpacityPct,
   onDownload,
+  onSave,
 }: EditorSidebarProps) {
   const [panel, setPanel] = useState<Panel>("main");
   const [dir, setDir] = useState(1);
   const [selectedBg, setSelectedBg] = useState<string>(bgColor);
+  const [saving, setSaving] = useState(false);
   const canFormat = !!(selectedId && selectedId !== "image");
   const canTransform = !!selectedId;
   const fontValue = canFormat ? selectedFontFamily || "" : "";
@@ -119,6 +122,16 @@ export default function EditorSidebar({
   useEffect(() => {
     setSelectedBg(bgColor);
   }, [bgColor]);
+
+  const handleSave = async () => {
+    if (!onSave) return;
+    setSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <aside className={`w-[380px] shrink-0 rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 ${className}`}>
@@ -317,14 +330,25 @@ export default function EditorSidebar({
 
             <div className="h-px w-full bg-zinc-800 my-4" />
 
-            <section>
+            <section className="grid grid-cols-2 gap-2">
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSave();
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-sm font-medium text-white"
+                disabled={saving}
+              >
+                <Save className="h-4 w-4" />
+                {saving ? "Saving…" : "Save"}
+              </button>
               <button
                 onMouseDown={(e) => {
                   e.preventDefault();
                   if (onDownload) onDownload();
                   else window.dispatchEvent(new CustomEvent("editor-download"));
                 }}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 hover:bg-indigo-500 px-3 py-2 text-sm font-medium text-white"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 hover:bg-indigo-500 px-3 py-2 text-sm font-medium text-white"
               >
                 <Download className="h-4 w-4" />
                 Download

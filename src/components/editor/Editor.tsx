@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import {
   Stage,
   Layer,
@@ -18,12 +18,12 @@ type TextLayer = {
   fontFamily: string;
   fontSize: number;
   color: string;
-  x: number;     // now treated as CENTER X for text
-  y: number;     // now treated as CENTER Y for text
+  x: number;
+  y: number;
   rotation: number;
   scaleX: number;
   scaleY: number;
-  opacity?: number; // default to 1
+  opacity?: number;
 };
 
 type Props = {
@@ -39,25 +39,40 @@ type Props = {
   ) => void;
   onChangeText: (id: string, patch: Partial<Omit<TextLayer, "id">>) => void;
   bgColor: string;
-
-  // from sidebar sliders
   imageRotation: number;
-  imageOpacity: number; // 0..1
+  imageOpacity: number;
+  imageX?: number;
+  imageY?: number;
+  imageScaleX?: number;
+  imageScaleY?: number;
+  onImageTransform?: (patch: Partial<{ x: number; y: number; scaleX: number; scaleY: number }>) => void;
 };
 
-export default function Editor({
-  logoId,
-  imageUrl,
-  brandName,
-  textLayers,
-  selectedId,
-  onSelect,
-  onReposition,
-  onChangeText,
-  bgColor,
-  imageRotation,
-  imageOpacity,
-}: Props) {
+export type EditorHandle = {
+  capturePreview: () => Promise<string | null>;
+};
+
+export default forwardRef<EditorHandle, Props>(function Editor(
+  {
+    logoId,
+    imageUrl,
+    brandName,
+    textLayers,
+    selectedId,
+    onSelect,
+    onReposition,
+    onChangeText,
+    bgColor,
+    imageRotation,
+    imageOpacity,
+    imageX,
+    imageY,
+    imageScaleX,
+    imageScaleY,
+    onImageTransform,
+  }: Props,
+  ref
+) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<any>(null);
   const imageNodeRef = useRef<any>(null);
@@ -66,15 +81,13 @@ export default function Editor({
   const [stageSize, setStageSize] = useState({ w: 600, h: 600 });
   const [img, imgStatus] = useImage(imageUrl, "anonymous");
 
-  // Image state now stores CENTER position + scale (rotation/opacity provided via props)
   const [imgState, setImgState] = useState({
-    x: 0, // center X
-    y: 0, // center Y
-    scaleX: 1,
-    scaleY: 1,
+    x: typeof imageX === "number" ? imageX : 0,
+    y: typeof imageY === "number" ? imageY : 0,
+    scaleX: typeof imageScaleX === "number" ? imageScaleX : 1,
+    scaleY: typeof imageScaleY === "number" ? imageScaleY : 1,
   });
 
-  // live text measurements for proper centering offsets & HTML overlay alignment
   const [textDims, setTextDims] = useState<Record<string, { w: number; h: number }>>({});
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -93,23 +106,32 @@ export default function Editor({
     return () => ro.disconnect();
   }, []);
 
-  // Fit image and center it; use CENTER coordinates with offset at image center
   useEffect(() => {
     if (!img || imgStatus !== "loaded") return;
+    if (typeof imageX === "number" && typeof imageY === "number") {
+      setImgState({
+        x: imageX,
+        y: imageY,
+        scaleX: typeof imageScaleX === "number" ? imageScaleX : 1,
+        scaleY: typeof imageScaleY === "number" ? imageScaleY : 1,
+      });
+      return;
+    }
     const { w, h } = stageSize;
     const iw = img.width || 1;
     const ih = img.height || 1;
     const margin = 0.8;
     const scale = Math.min((w * margin) / iw, (h * margin) / ih);
-    setImgState({
+    const centered = {
       x: w / 2,
       y: h / 2,
       scaleX: scale,
       scaleY: scale,
-    });
-  }, [img, imgStatus, stageSize]);
+    };
+    setImgState(centered);
+    onImageTransform?.(centered);
+  }, [img, imgStatus, stageSize, imageX, imageY, imageScaleX, imageScaleY, onImageTransform]);
 
-  // Keep Transformer glued to the currently selected node
   useEffect(() => {
     const tr = transformerRef.current;
     if (!tr) return;
@@ -123,7 +145,6 @@ export default function Editor({
     tr.getLayer()?.batchDraw();
   }, [selectedId, textLayers, imgState, imageRotation, imageOpacity]);
 
-  // First-time text placement: position at stage center (we rotate around center now)
   useEffect(() => {
     textLayers.forEach((t) => {
       if (t.x === 0 && t.y === 0) {
@@ -134,7 +155,6 @@ export default function Editor({
     });
   }, [textLayers, stageSize, onReposition]);
 
-  // Measure text nodes whenever content changes to compute offsets & overlay
   useEffect(() => {
     let changed = false;
     const next = { ...textDims };
@@ -151,10 +171,8 @@ export default function Editor({
       }
     });
     if (changed) setTextDims(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textLayers, stageSize]);
 
-  // HTML editing overlay focus & selection handling
   useEffect(() => {
     if (!editId) return;
     const el = editableRef.current;
@@ -228,28 +246,6 @@ export default function Editor({
     return () => window.removeEventListener("editor-format", handler as EventListener);
   }, [editId, selectedId, onChangeText]);
 
-  const handleDownload = () => {
-    if (!stageRef.current) return;
-    const tr = transformerRef.current as any | null;
-    let prevNodes: any[] = [];
-    if (tr) {
-      prevNodes = tr.nodes();
-      tr.nodes([]);
-      tr.getLayer()?.draw();
-    }
-    const uri = stageRef.current.toDataURL({ pixelRatio: 2, mimeType: "image/png" });
-    if (tr) {
-      tr.nodes(prevNodes);
-      tr.getLayer()?.draw();
-    }
-    const a = document.createElement("a");
-    a.href = uri;
-    a.download = `${brandName || "logo"}-${logoId}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-
   const handleStageMouseDown = (e: any) => {
     if (e.target === e.target.getStage()) {
       setEditId(null);
@@ -281,6 +277,42 @@ export default function Editor({
     onChangeText(editId, { html, text });
   };
 
+  const waitFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+  useImperativeHandle(ref, () => ({
+    async capturePreview() {
+      if (!stageRef.current) return null;
+      if (imageUrl && imgStatus !== "loaded") return null;
+
+      const prevEditId = editId;
+      if (prevEditId) {
+        handleEditableInput();
+        setEditId(null);
+        await waitFrame();
+      }
+
+      const tr = transformerRef.current as any | null;
+      let prevNodes: any[] = [];
+      if (tr) {
+        prevNodes = tr.nodes();
+        tr.nodes([]);
+        tr.getLayer()?.draw();
+      }
+
+      await waitFrame();
+      const uri = stageRef.current.toDataURL({ pixelRatio: 1, mimeType: "image/png" });
+
+      if (tr) {
+        tr.nodes(prevNodes);
+        tr.getLayer()?.draw();
+      }
+      if (prevEditId) {
+        setEditId(prevEditId);
+      }
+      return uri || null;
+    },
+  }));
+
   return (
     <div className="w-fit">
       <div ref={containerRef} className="relative w-full">
@@ -299,8 +331,8 @@ export default function Editor({
               <KonvaImage
                 ref={imageNodeRef}
                 image={img}
-                x={imgState.x}         // CENTER position
-                y={imgState.y}         // CENTER position
+                x={imgState.x}
+                y={imgState.y}
                 draggable
                 scaleX={imgState.scaleX}
                 scaleY={imgState.scaleY}
@@ -310,22 +342,21 @@ export default function Editor({
                 offsetY={img.height ? img.height / 2 : 0}
                 onMouseDown={() => onSelect("image")}
                 onTap={() => onSelect("image")}
-                onDragEnd={(e) =>
-                  setImgState((s) => ({
-                    ...s,
-                    x: e.target.x(),
-                    y: e.target.y(),
-                  }))
-                }
+                onDragEnd={(e) => {
+                  const patch = { x: e.target.x(), y: e.target.y() };
+                  setImgState((s) => ({ ...s, ...patch }));
+                  onImageTransform?.(patch);
+                }}
                 onTransformEnd={(e) => {
                   const node = e.target;
-                  setImgState((s) => ({
-                    ...s,
+                  const patch = {
                     x: node.x(),
                     y: node.y(),
                     scaleX: node.scaleX(),
                     scaleY: node.scaleY(),
-                  }));
+                  };
+                  setImgState((s) => ({ ...s, ...patch }));
+                  onImageTransform?.(patch);
                 }}
               />
             )}
@@ -348,8 +379,8 @@ export default function Editor({
                   ref={(node) => {
                     if (node) textNodeRefs.current[t.id] = node;
                   }}
-                  x={t.x} // CENTER position
-                  y={t.y} // CENTER position
+                  x={t.x}
+                  y={t.y}
                   offsetX={offX}
                   offsetY={offY}
                   text={t.text || ""}
@@ -359,7 +390,7 @@ export default function Editor({
                   rotation={t.rotation}
                   scaleX={t.scaleX}
                   scaleY={t.scaleY}
-                  opacity={editId === t.id ? 0 : (t.opacity ?? 1)}
+                  opacity={editId === t.id ? 0 : t.opacity ?? 1}
                   fontStyle={fontStyle as any}
                   textDecoration={textDecoration as any}
                   draggable
@@ -413,24 +444,24 @@ export default function Editor({
             suppressContentEditableWarning
             spellCheck={false}
             onInput={handleEditableInput}
-            onBlur={endEdit}
+            onBlur={() => setEditId(null)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                endEdit();
+                setEditId(null);
               }
               if (e.key === "Escape") {
                 e.preventDefault();
-                endEdit();
+                setEditId(null);
               }
             }}
             className="absolute whitespace-pre-wrap leading-none"
             style={{
               left: overlayLeft,
               top: overlayTop,
-              fontFamily: editingLayer.fontFamily,
-              fontSize: editingLayer.fontSize,
-              color: editingLayer.color,
+              fontFamily: editingLayer?.fontFamily,
+              fontSize: editingLayer?.fontSize,
+              color: editingLayer?.color,
               background: "transparent",
               outline: "none",
               border: "none",
@@ -449,4 +480,4 @@ export default function Editor({
       {imgStatus === "failed" && <div className="mt-3 text-sm text-red-500">Failed to load image</div>}
     </div>
   );
-}
+});
