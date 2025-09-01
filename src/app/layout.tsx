@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "LogoPogo",
     images: [
       {
-        url: "/logopogo_logo_transparent.png",
+        url: "/open_graph.png",
         width: 512,
         height: 512,
         alt: "LogoPogo",
