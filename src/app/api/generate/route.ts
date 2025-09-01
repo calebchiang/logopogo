@@ -11,13 +11,33 @@ export async function POST(req: Request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error("Auth error:", userError);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("credits")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      return NextResponse.json(
+        { error: "Failed to fetch profile/credits" },
+        { status: 400 }
+      );
+    }
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+    if ((profile.credits ?? 0) < 1) {
+      return NextResponse.json(
+        { error: "Not enough credits", code: "INSUFFICIENT_CREDITS" },
+        { status: 402 }
+      );
     }
 
     const body = await req.json();
     const { brand, description, symbol, palette } = body ?? {};
-    console.log("Incoming body:", body);
 
     const { imagesB64, model, usedPrompt } = await generateLogos({
       brand,
@@ -25,21 +45,18 @@ export async function POST(req: Request) {
       symbol,
       palette,
     });
-    console.log("Generated images:", imagesB64.length);
 
     const uploaded: any[] = [];
     for (const b64 of imagesB64) {
       try {
         const buffer = Buffer.from(b64, "base64");
         const filePath = `${user.id}/${crypto.randomUUID()}.png`;
-        console.log("Uploading file:", filePath, "size:", buffer.length);
 
         const { error: uploadError } = await supabase.storage
           .from("logos")
           .upload(filePath, buffer, { contentType: "image/png" });
 
         if (uploadError) {
-          console.error("Upload error:", uploadError);
           continue;
         }
 
@@ -57,32 +74,39 @@ export async function POST(req: Request) {
           .single();
 
         if (insertError) {
-          console.error("DB insert error:", insertError);
           continue;
         }
 
         if (inserted) {
-          const { data: { publicUrl } } = supabase
-            .storage
-            .from("logos")
-            .getPublicUrl(filePath);
-          console.log("Saved logo:", publicUrl);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("logos").getPublicUrl(filePath);
           uploaded.push({ ...inserted, url: publicUrl });
         }
-      } catch (innerErr: any) {
-        console.error("Error in logo loop:", innerErr);
-      }
+      } catch {}
     }
 
-    console.log("Final uploaded count:", uploaded.length);
+    let remainingCredits = profile.credits;
+    if (uploaded.length > 0) {
+      const { data: updated, error: decError } = await supabase
+        .from("profiles")
+        .update({ credits: (profile.credits ?? 0) - 1 })
+        .eq("user_id", user.id)
+        .select("credits")
+        .single();
+
+      if (!decError && updated) {
+        remainingCredits = updated.credits ?? remainingCredits - 1;
+      }
+    }
 
     return NextResponse.json({
       model,
       prompt: usedPrompt,
       logos: uploaded,
+      remainingCredits,
     });
   } catch (err: any) {
-    console.error("Route error:", err);
     return NextResponse.json(
       { error: err?.message ?? "Generation failed" },
       { status: 400 }

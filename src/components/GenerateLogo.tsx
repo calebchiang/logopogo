@@ -3,10 +3,12 @@
 import { useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import AuthModal from '@/components/AuthModal'
+import CreditsModal from './CreditsModal'
+import StripedProgressBar from './StripedProgressBar'
 import { palettes } from '@/lib/palettes'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Download, Edit, AlertTriangle, Coins } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 type LogoRow = {
   id: string
@@ -23,6 +25,7 @@ type GenResponse = {
   model: string
   prompt: string
   logos: LogoRow[]
+  remainingCredits?: number
 }
 
 type Props = {
@@ -45,6 +48,9 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
   const [pendingAfterAuth, setPendingAfterAuth] = useState(false)
   const retryOnceRef = useRef(false)
 
+  const [creditsAlert, setCreditsAlert] = useState(false)
+  const [showCredits, setShowCredits] = useState(false)
+
   const supabase = createClient()
 
   const ensureSessionReady = async (maxMs = 4000) => {
@@ -64,6 +70,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
 
   const handleSubmit = async () => {
     setError(null)
+    setCreditsAlert(false)
     setLogos([])
     setLoading(true)
 
@@ -82,6 +89,12 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       if (res.status === 401) {
         setShowAuth(true)
         setPendingAfterAuth(true)
+        setLoading(false)
+        return
+      }
+
+      if (res.status === 402) {
+        setCreditsAlert(true)
         setLoading(false)
         return
       }
@@ -136,9 +149,12 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
     return found?.id
   })()
 
+  const firstLogo = logos[0]
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
       <AuthModal open={showAuth} onOpenChange={handleAuthOpenChange} />
+      <CreditsModal open={showCredits} onOpenChange={setShowCredits} />
 
       {step === 0 && (
         <section className="text-center mb-2">
@@ -152,6 +168,23 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       )}
 
       <div className="p-2 md:p-8 bg-[var(--background)]">
+        {creditsAlert && (
+          <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-200">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                <p className="text-sm font-medium">Not enough credits to generate a logo.</p>
+              </div>
+              <button
+                onClick={() => setShowCredits(true)}
+                className="inline-flex items-center rounded-lg border border-amber-500/40 bg-amber-500/20 px-3 py-1.5 text-xs font-medium hover:bg-amber-500/25"
+              >
+                Get credits
+              </button>
+            </div>
+          </div>
+        )}
+
         {step === 0 && (
           <form
             onSubmit={(e) => {
@@ -249,6 +282,11 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
               className="w-full border border-zinc-800 p-3 rounded bg-transparent"
               placeholder="What does your business do?"
             />
+            {loading && (
+              <div className="mt-2">
+                <StripedProgressBar />
+              </div>
+            )}
             <div className="flex items-center justify-between mt-2">
               <button onClick={back} className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900">
                 Back
@@ -256,9 +294,10 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
               <button
                 onClick={() => !loading && symbol.trim() && handleSubmit()}
                 disabled={!symbol.trim() || loading}
-                className="bg-black text-white py-2 px-4 rounded border border-zinc-800 disabled:opacity-60"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded border border-zinc-800 disabled:opacity-60"
               >
-                {loading ? 'Generating…' : 'Generate Logo'}
+                <Coins className="text-yellow-300 h-4 w-4" />
+                {loading ? 'Working…' : 'Generate Logo'}
               </button>
             </div>
             {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
@@ -266,40 +305,38 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
         )}
       </div>
 
-      {logos.length > 0 && (
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold mb-4">Results</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {logos.map((l, i) => (
-            <div key={l.id} className="border border-zinc-800 rounded-lg p-4">
+      {firstLogo && (
+        <section className="mt-12">
+          <div className="max-w-xl mx-auto">
+            <div className="border border-zinc-800 rounded-lg p-4">
               <div className="aspect-square w-full">
-                <img src={l.url} alt={`logo-${i + 1}`} className="w-full h-full object-contain" />
+                <img src={firstLogo.url} alt="logo-1" className="w-full h-full object-contain" />
               </div>
-              <div className="flex items-center gap-4 mt-3 text-zinc-600">
+              <div className="flex items-center justify-center gap-6 mt-4 text-zinc-600">
                 <a
-                  href={l.url}
-                  download={`logopogo_${i + 1}.png`}
+                  href={firstLogo.url}
+                  download="logopogo_1.png"
                   rel="noreferrer"
                   target="_blank"
                   className="flex items-center gap-1 hover:text-white transition-colors"
                   title="Download PNG"
                 >
                   <Download className="w-4 h-4 text-zinc-400 cursor-pointer" />
+                  <span className="text-sm">Download</span>
                 </a>
-
                 <button
-                  onClick={() => router.push(`/editor/${l.id}`)}
+                  onClick={() => router.push(`/editor/${firstLogo.id}`)}
                   className="flex items-center gap-1 hover:text-white transition-colors"
                   title="Edit"
                 >
                   <Edit className="w-4 h-4 text-zinc-400 cursor-pointer" />
+                  <span className="text-sm">Edit</span>
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-    )}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
