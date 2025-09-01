@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         user_id: user.id,
         pack,
-      },
+      },s
     })
 
     return NextResponse.json({ url: session.url })
