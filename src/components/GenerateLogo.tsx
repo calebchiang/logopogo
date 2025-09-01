@@ -4,10 +4,11 @@ import { useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import AuthModal from '@/components/AuthModal'
 import CreditsModal from './CreditsModal'
+import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
 import { palettes } from '@/lib/palettes'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit, AlertTriangle, Coins } from 'lucide-react'
+import { Download, Edit, AlertTriangle, Coins, HelpCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type LogoRow = {
@@ -50,6 +51,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
 
   const [creditsAlert, setCreditsAlert] = useState(false)
   const [showCredits, setShowCredits] = useState(false)
+  const [showTips, setShowTips] = useState(false)
 
   const supabase = createClient()
 
@@ -155,6 +157,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
     <div className="mx-auto max-w-5xl px-6 py-16">
       <AuthModal open={showAuth} onOpenChange={handleAuthOpenChange} />
       <CreditsModal open={showCredits} onOpenChange={setShowCredits} />
+      <LogoGenTipsModal open={showTips} onOpenChange={setShowTips} />
 
       {step === 0 && (
         <section className="text-center mb-2">
@@ -263,7 +266,17 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
 
         {step === 2 && (
           <div className="grid gap-4">
-            <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description</label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description</label>
+              <button
+                type="button"
+                onClick={() => setShowTips(true)}
+                aria-label="Tips"
+                className="inline-flex items-center rounded-full p-1.5 text-zinc-300 hover:text-white hover:bg-zinc-800"
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+            </div>
             <textarea
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
