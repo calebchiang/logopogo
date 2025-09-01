@@ -14,12 +14,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import AuthModal from '@/components/AuthModal'
+import CreditsModal from '@/components/CreditsModal'
 
 export default function Navbar() {
   const supabase = createClient()
   const [isAuthed, setIsAuthed] = useState(false)
   const [credits, setCredits] = useState<number>(0)
   const [authOpen, setAuthOpen] = useState(false)
+  const [creditsOpen, setCreditsOpen] = useState(false)
   const [email, setEmail] = useState<string | null>(null)
 
   useEffect(() => {
@@ -73,11 +75,17 @@ export default function Navbar() {
     setEmail(null)
   }
 
+  const openCredits = () => setCreditsOpen(true)
+
+  const handleCheckout = () => {
+    console.log('Open Stripe checkout for 10-credit pack')
+  }
+
   return (
     <>
       <nav className="w-full bg-[var(--background)] text-[var(--foreground)]">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center">
-          <a href="/" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-3">
             <Image
               src="/logopogo_logo_transparent.png"
               alt="LogoPogo"
@@ -87,14 +95,20 @@ export default function Navbar() {
               className="rounded-lg"
             />
             <span className="font-bold text-2xl leading-none">LogoPogo</span>
-          </a>
+          </Link>
 
           {isAuthed ? (
             <div className="ml-auto flex items-center gap-4">
-              <div className="inline-flex items-center gap-2 rounded-md border border-yellow-200 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-800">
+              <button
+                type="button"
+                onClick={openCredits}
+                aria-label="Open credits"
+                title="Buy more credits"
+                className="inline-flex items-center gap-2 rounded-md border border-yellow-300/40 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-200 cursor-pointer active:scale-[0.99] transition"
+              >
                 <Coins className="h-4 w-4 text-yellow-500" />
                 <span>{credits}</span>
-              </div>
+              </button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -114,7 +128,7 @@ export default function Navbar() {
                   )}
 
                   <DropdownMenuItem asChild>
-                    <a
+                    <Link
                       href="/recent"
                       className="flex items-center gap-2 cursor-pointer"
                       aria-label="Recently generated logos"
@@ -122,7 +136,7 @@ export default function Navbar() {
                     >
                       <Clock className="h-4 w-4" />
                       <span>Recently generated logos</span>
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
 
@@ -131,6 +145,12 @@ export default function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <CreditsModal
+                open={creditsOpen}
+                onOpenChange={setCreditsOpen}
+                onCheckout={handleCheckout}
+              />
             </div>
           ) : (
             <div className="ml-auto">
