@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
-import { Stage, Layer, Image as KonvaImage, Transformer, Rect, Text as KonvaText } from "react-konva";
+import { Stage, Layer, Image as KonvaImage, Transformer, Rect, Text as KonvaText, Line } from "react-konva";
 import useImage from "use-image";
 
 type TextLayer = {
@@ -87,6 +87,9 @@ export default forwardRef<EditorHandle, Props>(function Editor(
   const [editId, setEditId] = useState<string | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
+
+  const [showVGuide, setShowVGuide] = useState(false);
+  const [showHGuide, setShowHGuide] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -355,6 +358,10 @@ export default forwardRef<EditorHandle, Props>(function Editor(
   const overlayLeft = editingLayer ? editingLayer.x - (editDims?.w || 0) / 2 : 0;
   const overlayTop = editingLayer ? editingLayer.y - (editDims?.h || 0) / 2 : 0;
 
+  const centerX = stageSize.w / 2;
+  const centerY = stageSize.h / 2;
+  const snapThreshold = 8;
+
   return (
     <div className="w-fit">
       <div ref={containerRef} className="relative w-full">
@@ -392,7 +399,27 @@ export default forwardRef<EditorHandle, Props>(function Editor(
                 offsetY={img.height ? img.height / 2 : 0}
                 onMouseDown={() => onSelect("image")}
                 onTap={() => onSelect("image")}
+                onDragMove={(e) => {
+                  const node = e.target;
+                  let nx = node.x();
+                  let ny = node.y();
+                  const nearV = Math.abs(nx - centerX) <= snapThreshold;
+                  const nearH = Math.abs(ny - centerY) <= snapThreshold;
+                  setShowVGuide(nearV);
+                  setShowHGuide(nearH);
+                  if (nearV) {
+                    nx = centerX;
+                    node.x(nx);
+                  }
+                  if (nearH) {
+                    ny = centerY;
+                    node.y(ny);
+                  }
+                  node.getLayer()?.batchDraw();
+                }}
                 onDragEnd={(e) => {
+                  setShowVGuide(false);
+                  setShowHGuide(false);
                   const patch = { x: e.target.x(), y: e.target.y() };
                   setImgState((s) => ({ ...s, ...patch }));
                   onImageTransform?.(patch);
@@ -448,7 +475,29 @@ export default forwardRef<EditorHandle, Props>(function Editor(
                   onTap={() => onSelect(t.id)}
                   onDblClick={() => beginEdit(t.id)}
                   onDblTap={() => beginEdit(t.id)}
-                  onDragEnd={(e) => onReposition(t.id, { x: e.target.x(), y: e.target.y() })}
+                  onDragMove={(e) => {
+                    const node = e.target;
+                    let nx = node.x();
+                    let ny = node.y();
+                    const nearV = Math.abs(nx - centerX) <= snapThreshold;
+                    const nearH = Math.abs(ny - centerY) <= snapThreshold;
+                    setShowVGuide(nearV);
+                    setShowHGuide(nearH);
+                    if (nearV) {
+                      nx = centerX;
+                      node.x(nx);
+                    }
+                    if (nearH) {
+                      ny = centerY;
+                      node.y(ny);
+                    }
+                    node.getLayer()?.batchDraw();
+                  }}
+                  onDragEnd={(e) => {
+                    setShowVGuide(false);
+                    setShowHGuide(false);
+                    onReposition(t.id, { x: e.target.x(), y: e.target.y() });
+                  }}
                   onTransformEnd={(e) => {
                     const node = e.target;
                     const sy = node.scaleY();
@@ -484,6 +533,27 @@ export default forwardRef<EditorHandle, Props>(function Editor(
               ]}
               boundBoxFunc={(oldBox, newBox) => (newBox.width < 10 || newBox.height < 10 ? oldBox : newBox)}
             />
+          </Layer>
+
+          <Layer listening={false}>
+            {showVGuide && (
+              <Line
+                points={[centerX, 0, centerX, stageSize.h]}
+                stroke="#60a5fa"
+                strokeWidth={1}
+                dash={[4, 4]}
+                opacity={0.9}
+              />
+            )}
+            {showHGuide && (
+              <Line
+                points={[0, centerY, stageSize.w, centerY]}
+                stroke="#60a5fa"
+                strokeWidth={1}
+                dash={[4, 4]}
+                opacity={0.9}
+              />
+            )}
           </Layer>
         </Stage>
 
