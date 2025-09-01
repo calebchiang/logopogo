@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { addCredits10 } from '@/lib/stripe/webhookHandler'
+import { addCredits20 } from '@/lib/stripe/webhookHandler'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-08-27.basil' })
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (session.payment_status === 'paid') {
       const userId = session.metadata?.user_id || ''
       if (userId) {
-        await addCredits10({ userId })
+        await addCredits20({ userId })
       }
     }
   }

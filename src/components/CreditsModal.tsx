@@ -73,7 +73,7 @@ export default function CreditsModal({ open, onOpenChange, onCheckout }: Credits
           <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950 p-5">
             <div className="flex items-end justify-between">
               <div>
-                <div className="text-3xl font-bold leading-none">$7.99</div>
+                <div className="text-3xl font-bold leading-none">$9.99</div>
               </div>
             </div>
           </div>
@@ -81,7 +81,7 @@ export default function CreditsModal({ open, onOpenChange, onCheckout }: Credits
           <ul className="mt-6 space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-              <span>10 logo generation credits (2 logos per generation)</span>
+              <span>20 logo generation credits</span>
             </li>
             <li className="flex items-start gap-3">
               <Download className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" />
