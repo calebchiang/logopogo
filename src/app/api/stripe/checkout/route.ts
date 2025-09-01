@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${baseUrl}`,
       cancel_url: `${baseUrl}`,
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
