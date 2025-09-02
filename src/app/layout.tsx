@@ -37,17 +37,24 @@ export const metadata: Metadata = {
     title: "LogoPogo — AI Logo Generator",
     description:
       "Generate clean, icon-only logos for apps and websites with strict color and transparency rules.",
-    url: "/",
+    url: "https://www.logopogo.io/",
     siteName: "LogoPogo",
     images: [
       {
-        url: "/open_graph.png",
-        width: 512,
-        height: 512,
+        url: "https://www.logopogo.io/open_graph.png",
+        width: 1200,
+        height: 630,
         alt: "LogoPogo",
       },
     ],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LogoPogo — AI Logo Generator",
+    description:
+      "Generate clean, icon-only logos for apps and websites with transparent PNGs and unlimited downloads.",
+    images: ["https://www.logopogo.io/open_graph.png"],
   },
   themeColor: "#18181b",
   icons: {
