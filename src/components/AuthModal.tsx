@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import { Coins } from 'lucide-react'
 
 type Props = {
   open: boolean
@@ -61,6 +62,12 @@ export default function AuthModal({ open, onOpenChange }: Props) {
       <DialogContent className="sm:max-w-md bg-zinc-50 text-zinc-900">
         <DialogHeader>
           <DialogTitle className="text-xl">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</DialogTitle>
+          {mode === 'signup' && (
+            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-sm text-emerald-800">
+              <Coins className="h-4 w-4 text-amber-600" />
+              <span>Sign up and get 3 free logo generations</span>
+            </div>
+          )}
         </DialogHeader>
 
         <div className="space-y-4 text-zinc-300">
