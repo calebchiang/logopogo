@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import AuthModal from '@/components/AuthModal'
 import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
-import { palettes } from '@/lib/palettes'
 import { createClient } from '@/lib/supabase/client'
 import { Download, Edit, AlertTriangle, Coins, HelpCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -17,7 +15,6 @@ type LogoRow = {
   url: string
   brand_name?: string
   symbol_description?: string
-  palette?: string[] | null
   business_description?: string | null
   created_at?: string
 }
@@ -37,7 +34,6 @@ type Props = {
 export default function GenerateLogo({ step, onStepChange }: Props) {
   const [brand, setBrand] = useState('')
   const [description, setDescription] = useState('')
-  const [palette, setPalette] = useState('')
   const [symbol, setSymbol] = useState('')
   const router = useRouter()
 
@@ -67,7 +63,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
     return false
   }
 
-  const next = () => onStepChange(Math.min(step + 1, 2) as Props['step'])
+  const next = () => onStepChange(Math.min(step + 1, 1) as Props['step'])
   const back = () => onStepChange(Math.max(step - 1, 0) as Props['step'])
 
   const handleSubmit = async () => {
@@ -84,7 +80,6 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
           brand: brand.trim(),
           description: description.trim(),
           symbol: symbol.trim(),
-          palette: palette.trim(),
         }),
       })
 
@@ -145,11 +140,6 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       }
     }
   }
-
-  const selectedPaletteId = (() => {
-    const found = palettes.find((p) => p.colors.join(', ') === palette)
-    return found?.id
-  })()
 
   const firstLogo = logos[0]
 
@@ -218,55 +208,6 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
         {step === 1 && (
           <div className="grid gap-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-zinc-300 text-left">Colour Palette</label>
-              <span className="text-xs text-zinc-500">Step 2 of 3</span>
-            </div>
-            <p className="text-sm text-zinc-500">Select one palette. You can customize later.</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {palettes.map((p) => {
-                const isSelected = palette === p.colors.join(', ')
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setPalette(p.colors.join(', '))}
-                    className={`w-full rounded-2xl transition focus:outline-none ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
-                  >
-                    <Card
-                      className={`h-30 w-full rounded-2xl border-zinc-800 shadow-sm overflow-hidden p-0 ${isSelected ? 'border-indigo-500' : ''}`}
-                    >
-                      <CardContent className="p-0 h-full">
-                        <div className="grid grid-cols-4 h-full w-full">
-                          {p.colors.map((c, i) => (
-                            <div key={i} className="h-full w-full" style={{ backgroundColor: c }} />
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="flex items-center justify-between mt-2">
-              <button onClick={back} className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900">
-                Back
-              </button>
-              <button
-                onClick={() => palette.trim() && next()}
-                disabled={!palette.trim()}
-                className="bg-black text-white py-2 px-5 rounded border border-zinc-800 disabled:opacity-60"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="grid gap-4">
-            <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description</label>
               <button
                 type="button"
@@ -281,7 +222,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               className="w-full border border-zinc-800 p-3 rounded bg-transparent"
-              placeholder="e.g. brain icon with a lightning bolt through the center"
+              placeholder="e.g. black and white panda with a gold lightning bolt through the center"
               rows={3}
               required
             />

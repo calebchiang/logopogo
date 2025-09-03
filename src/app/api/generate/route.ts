@@ -37,13 +37,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { brand, description, symbol, palette } = body ?? {};
+    const { brand, description, symbol } = body ?? {};
 
     const { imagesB64, model, usedPrompt } = await generateLogos({
       brand,
       description,
       symbol,
-      palette,
     });
 
     const uploaded: any[] = [];
@@ -66,7 +65,6 @@ export async function POST(req: Request) {
             user_id: user.id,
             brand_name: brand,
             symbol_description: symbol,
-            palette: Array.isArray(palette) ? palette : [palette],
             business_description: description,
             image_path: filePath,
           })

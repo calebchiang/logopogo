@@ -3,8 +3,7 @@ import OpenAI from "openai";
 export type GenerateLogosArgs = {
   brand: string;
   symbol: string;
-  palette: string[] | string;
-  description?: string; 
+  description?: string;
 };
 
 export type GenerateLogosResult = {
@@ -15,50 +14,37 @@ export type GenerateLogosResult = {
 
 const MODEL = "gpt-image-1";
 
-function normalizePalette(palette: GenerateLogosArgs["palette"]): string[] {
-  const arr = Array.isArray(palette)
-    ? palette
-    : palette.split(",").map((c) => c.trim());
-  return arr.filter((hex) => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex));
-}
-
-function buildPrompt(
-  brand: string,
-  symbol: string,
-  paletteHexes: string[],
-  description?: string
-) {
-  console.log('[generateLogos] SYMBOL:', symbol)
-  const paletteList = paletteHexes.join(", ");
-  console.log('[generateLogos] PALETTE_LIST:', paletteList)
-
+function buildPrompt(brand: string, symbol: string, description?: string) {
   return [
-    `You are a high quality, professional logo generator for tech companies, websites, and apps. Generate a high quality, clean, modern, icon-only logo for the brand "${brand}". The logo must depict: ${symbol}.`,
+    `You are a high-quality, professional logo generator for tech companies, websites, and apps.
+Generate a clean, modern, icon-only logo for the brand "${brand}".
+The logo must depict: ${symbol}.`,
+
     description && description.trim()
       ? `BUSINESS CONTEXT (FOR SYMBOLISM ONLY):
 - ${description.trim()}
-- Use this context only to inform the visual symbolism and shape choices. Do NOT include any text, letters, numbers, slogans, or brand names.`
+- Use this ONLY to inform shapes and symbolism. Do NOT include any text, letters, numbers, slogans, or brand names.`
       : null,
-    `
-1) If the ${symbol} explicitly names a color for the element it described, use that exact color for those specific elements (e.g. black and white panda).
-2) For all other elements in ${symbol} without explicit color instructions, use the default ${paletteList} for color.
-3.) If all specified elements in ${symbol} have a color description, then there is no need to use any colors from ${paletteList}`,
+
+    `COLOR RULES:
+- If the symbol description explicitly names colors for any element, use those exact colors for those elements.
+- If colors are not specified, choose a tasteful minimal palette (monochrome or duotone) with strong contrast that works on both light and dark backgrounds.
+- Avoid gradients unless explicitly requested. Prefer solid fills and simple strokes.`,
 
     `OUTPUT REQUIREMENTS:
-- Return a single centered icon on a fully transparent background (PNG with alpha).
-- The canvas background must be 100% transparent (alpha=0). Do NOT fill the canvas with any solid or gradient color.
-- No borders, frames, canvases, or mockup surfaces.
-- DO NOT include any elements in the logo that is not specified by the ${symbol}`,
+- Return a single centered icon on a fully transparent background (PNG with alpha=0).
+- No borders, frames, canvases, mockups, or extra UI elements.
+- Include ONLY elements specified by the symbol description.`,
 
     `BACKGROUND ELEMENTS:
-- Do not add scenes/backgrounds by default.
-- EXCEPTION: If the ${symbol} explicitly requests background elements (e.g., "green bamboo forest in the background"), include them as part of the icon composition while keeping the canvas transparent.`,
+- Do not add backgrounds by default.
+- EXCEPTION: If the symbol explicitly requests background elements, include them while keeping the canvas transparent.`,
 
     `STYLE CONSTRAINTS:
-- Clean, modern, vector-like shapes. No watermarks, signatures, UI chrome, reflections, or photorealism.`,
+- Clean, modern, vector-like shapes. No photorealism, watermarks, signatures, or UI chrome.`,
 
     `COMPOSITION:
-- Center the icon on the canvas with equal padding on all sides.`,
+- Center the icon with even padding on all sides.`,
 
     `ABSOLUTE TEXT BAN:
 - Do NOT include text, letters, numbers, monograms, or typographic marks.`,
@@ -73,41 +59,30 @@ no text, no letters, no numbers, no typography, no words, no monograms, no mocku
 export async function generateLogos({
   brand,
   symbol,
-  palette,
   description,
 }: GenerateLogosArgs): Promise<GenerateLogosResult> {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-
-  const paletteHexes = normalizePalette(palette);
-  if (!paletteHexes.length) {
-    throw new Error("Palette must include at least one valid hex color.");
-  }
+  if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
   if (!brand?.trim()) throw new Error("Brand is required.");
   if (!symbol?.trim()) throw new Error("Symbol description is required.");
 
-  const usedPrompt = buildPrompt(
-    brand.trim(),
-    symbol.trim(),
-    paletteHexes,
-    description
-  );
+  const usedPrompt = buildPrompt(brand.trim(), symbol.trim(), description);
 
-  // number of images generated
-  const n = 1;
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
   const result = await openai.images.generate({
     model: MODEL,
     prompt: usedPrompt,
     size: "1024x1024",
-    n,
+    n: 1,
   });
 
   const imagesB64 = (result.data ?? [])
     .map((d) => d.b64_json || "")
     .filter((b64): b64 is string => !!b64);
+
+  if (!imagesB64.length) {
+    throw new Error("No image returned from generator");
+  }
 
   return {
     imagesB64,
