@@ -6,7 +6,7 @@ import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit, AlertTriangle, Coins, HelpCircle } from 'lucide-react'
+import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type LogoRow = {
@@ -199,6 +199,24 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
 
   const firstLogo = logos[0]
 
+  const resetAll = () => {
+    clearSaved()
+    setBrand('')
+    setDescription('')
+    setSymbol('')
+    setLogos([])
+    setError(null)
+    setCreditsAlert(false)
+    setShowAuth(false)
+    setShowCredits(false)
+    setShowTips(false)
+    setLoading(false)
+    setPendingAfterAuth(false)
+    retryOnceRef.current = false
+    autoSubmittedRef.current = false
+    onStepChange(0)
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
       <AuthModal open={showAuth} onOpenChange={handleAuthOpenChange} />
@@ -318,7 +336,14 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       {firstLogo && (
         <section className="mt-12">
           <div className="max-w-xl mx-auto">
-            <div className="border border-zinc-800 rounded-lg p-4">
+            <div className="relative border border-zinc-800 rounded-lg p-4">
+              <button
+                onClick={resetAll}
+                className="absolute left-1/2 -translate-x-1/2 top-2 z-10 inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Generate another logo
+              </button>
               <div className="aspect-square w-full">
                 <img src={firstLogo.url} alt="logo-1" className="w-full h-full object-contain bg-white" />
               </div>
