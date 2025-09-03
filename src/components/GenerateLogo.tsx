@@ -264,7 +264,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
           <div className="max-w-xl mx-auto">
             <div className="border border-zinc-800 rounded-lg p-4">
               <div className="aspect-square w-full">
-                <img src={firstLogo.url} alt="logo-1" className="w-full h-full object-contain" />
+                <img src={firstLogo.url} alt="logo-1" className="w-full h-full object-contain bg-white" />
               </div>
               <div className="flex items-center justify-center gap-6 mt-4 text-zinc-600">
                 <a

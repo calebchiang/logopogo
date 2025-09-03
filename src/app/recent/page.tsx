@@ -113,7 +113,7 @@ export default function RecentPage() {
                 <img
                   src={l.url}
                   alt={l.brand_name || `logo-${i + 1}`}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain bg-white"
                 />
               </div>
               <div className="mt-3 flex items-center justify-between">
