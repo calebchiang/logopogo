@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaTiktok, FaYoutube, FaInstagram } from 'react-icons/fa'
+import { Mail } from 'lucide-react'
 
 export default function Footer() {  
   return (
@@ -25,7 +26,14 @@ export default function Footer() {
           </div>
         </div>
         <div className="flex flex-col items-center md:items-end gap-3">
-          <p className="text-sm text-zinc-400">Follow us for design ideas</p>
+          <a 
+            href="mailto:contact@logopogo.io" 
+            className="flex items-center gap-2 text-sm text-zinc-300 hover:text-white transition-colors"
+          >
+            <Mail size={18} />
+            contact@logopogo.io
+          </a>
+          <p className="text-sm text-zinc-400 mt-2">Follow us for design ideas:</p>
           <div className="flex gap-5 text-zinc-400">
             <Link href="https://www.tiktok.com/@logopogo.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
               <FaTiktok size={22} />
