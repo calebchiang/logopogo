@@ -34,10 +34,8 @@ export default function LogoGenTipsModal({ open, onOpenChange }: Props) {
                 <li>
                   <span className="font-medium">State a style:</span> “Flat icon, outline, modern minimalist.”
                 </li>
-                <li>
-                  <span className="font-medium">Be clear with colors:</span> If you want certain elements to use colors
-                  outside your chosen palette, specify them (e.g. “Blue rocket with a red flame”) and the AI will override
-                  the palette.
+                <li>If you want certain elements to use exact colors, say so (e.g., black and white panda). 
+                  If you don’t, the AI will choose for you. 
                 </li>
                 <li>
                   <span className="font-medium">Keep it simple:</span> 1–2 strong visual elements work best.

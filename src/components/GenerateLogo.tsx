@@ -208,7 +208,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
         {step === 1 && (
           <div className="grid gap-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description</label>
+              <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description (the more descriptive, the better quality logo)</label>
               <button
                 type="button"
                 onClick={() => setShowTips(true)}
@@ -222,7 +222,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               className="w-full border border-zinc-800 p-3 rounded bg-transparent"
-              placeholder="e.g. black and white panda with a gold lightning bolt through the center"
+              placeholder="e.g. brown monkey typing on a gray laptop"
               rows={3}
               required
             />
