@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import AuthModal from '@/components/AuthModal'
 import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
@@ -50,6 +50,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
   const [showTips, setShowTips] = useState(false)
 
   const supabase = createClient()
+  const autoSubmittedRef = useRef(false)
 
   const ensureSessionReady = async (maxMs = 4000) => {
     const start = Date.now()
@@ -64,7 +65,18 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
   }
 
   const next = () => onStepChange(Math.min(step + 1, 1) as Props['step'])
-  const back = () => onStepChange(Math.max(step - 1, 0) as Props['step'])
+
+  const clearSaved = () => {
+    try {
+      sessionStorage.removeItem('lp.generate.inputs')
+      sessionStorage.removeItem('lp.generate.resume')
+    } catch {}
+  }
+
+  const back = () => {
+    clearSaved()
+    onStepChange(Math.max(step - 1, 0) as Props['step'])
+  }
 
   const handleSubmit = async () => {
     setError(null)
@@ -84,6 +96,10 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       })
 
       if (res.status === 401) {
+        try {
+          sessionStorage.setItem('lp.generate.inputs', JSON.stringify({ brand: brand.trim(), description: description.trim(), symbol: symbol.trim(), step }))
+          sessionStorage.setItem('lp.generate.resume', '1')
+        } catch {}
         setShowAuth(true)
         setPendingAfterAuth(true)
         setLoading(false)
@@ -140,6 +156,46 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       }
     }
   }
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('lp.generate.inputs')
+      if (saved) {
+        const data = JSON.parse(saved) as { brand?: string; description?: string; symbol?: string; step?: Props['step'] }
+        if (typeof data.brand === 'string') setBrand(data.brand)
+        if (typeof data.description === 'string') setDescription(data.description)
+        if (typeof data.symbol === 'string') setSymbol(data.symbol)
+        if (typeof data.step !== 'undefined') onStepChange(data.step as Props['step'])
+      }
+    } catch {}
+  }, [onStepChange])
+
+  useEffect(() => {
+    const resume = (() => {
+      try {
+        return sessionStorage.getItem('lp.generate.resume') === '1'
+      } catch {
+        return false
+      }
+    })()
+    if (!resume || autoSubmittedRef.current) return
+    let cancelled = false
+    ;(async () => {
+      const ready = await ensureSessionReady(4000)
+      if (cancelled) return
+      try {
+        sessionStorage.removeItem('lp.generate.resume')
+      } catch {}
+      if (!ready) return
+      if (!brand.trim() || !symbol.trim()) return
+      if (autoSubmittedRef.current) return
+      autoSubmittedRef.current = true
+      await handleSubmit()
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [brand, symbol])
 
   const firstLogo = logos[0]
 
