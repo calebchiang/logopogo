@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 export default function DemoVideo() {
   return (
     <section className="mx-auto max-w-5xl px-6 pb-12 text-center">
-      <div className="border-t border-zinc-800/60 mb-8"></div>
       <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-6">
         See Logo<span className="text-green-500">Pogo</span> in Action
       </h2>
