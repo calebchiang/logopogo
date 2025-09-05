@@ -18,7 +18,7 @@ export default function DemoVideo() {
         <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
           <iframe
             className="absolute inset-0 h-full w-full"
-            src="https://www.youtube-nocookie.com/embed/BFeWOHTHRSI?rel=0&modestbranding=1&playsinline=1"
+            src="https://www.youtube-nocookie.com/embed/AP00poJ6wiE?rel=0&modestbranding=1&playsinline=1"
             title="LogoPogo Demo"
             loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
