@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import GenerateLogo from '@/components/GenerateLogo'
 import SampleLogos from '@/components/SampleLogos'
+import ProductMockups from '@/components/ProductMockups'
 import DemoVideo from '@/components/DemoVideo'
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
       {step === 0 && (
         <>
           <SampleLogos />
+          <ProductMockups />
           <DemoVideo />
         </>
       )}
