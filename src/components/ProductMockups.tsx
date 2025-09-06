@@ -12,8 +12,7 @@ export default function ProductMockups() {
     <section className="mx-auto max-w-5xl px-6 text-center mb-20">
       <AuthModal open={open} onOpenChange={setOpen} />
       <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-        Professional branding once cost a fortune. With AI, it’s now <span className="italic">free.</span>
-      </h2>
+      Create <span className="italic">impactful</span> branding with zero design experience.      </h2>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 place-items-center">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -50,9 +49,9 @@ export default function ProductMockups() {
       <div className="mt-8">
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center justify-center h-12 rounded-xl px-5 bg-emerald-500 text-white border border-zinc-800 hover:bg-emerald-600"
+          className="inline-flex items-center justify-center h-12 rounded-xl px-5 bg-emerald-600 text-white border border-zinc-800 hover:bg-emerald-700"
         >
-          Create an account to claim your free logo credits
+          Start Designing Today
         </button>
       </div>
     </section>

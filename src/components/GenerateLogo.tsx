@@ -6,8 +6,9 @@ import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw } from 'lucide-react'
+import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import AdjustWithAiModal from './AdjustWithAiModal'
 
 type LogoRow = {
   id: string
@@ -48,9 +49,11 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
   const [creditsAlert, setCreditsAlert] = useState(false)
   const [showCredits, setShowCredits] = useState(false)
   const [showTips, setShowTips] = useState(false)
+  const [showAdjust, setShowAdjust] = useState(false)
 
   const supabase = createClient()
   const autoSubmittedRef = useRef(false)
+  const pendingEditRef = useRef<{ instruction: string; parentLogoId: string } | null>(null)
 
   const ensureSessionReady = async (maxMs = 4000) => {
     const start = Date.now()
@@ -137,6 +140,62 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
     }
   }
 
+  const handleAiAdjust = async (instruction: string) => {
+    const firstLogo = logos[0]
+    if (!firstLogo?.id || !instruction.trim()) return
+    setError(null)
+    setCreditsAlert(false)
+    setLoading(true)
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parentLogoId: firstLogo.id,
+          editInstruction: instruction.trim(),
+        }),
+      })
+
+      if (res.status === 401) {
+        pendingEditRef.current = { instruction: instruction.trim(), parentLogoId: firstLogo.id }
+        setShowAuth(true)
+        setPendingAfterAuth(true)
+        setLoading(false)
+        return
+      }
+
+      if (res.status === 402) {
+        setCreditsAlert(true)
+        setLoading(false)
+        return
+      }
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        let message = 'Generation failed'
+        try {
+          const j = text ? JSON.parse(text) : null
+          if (j?.error) message = j.error
+        } catch {}
+        throw new Error(message)
+      }
+
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        const text = await res.text().catch(() => '')
+        throw new Error(text || 'Unexpected response format')
+      }
+
+      const json: GenResponse = await res.json()
+      setLogos(json.logos || [])
+      setShowAdjust(false)
+    } catch (err: any) {
+      setError(err?.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleAuthOpenChange = async (open: boolean) => {
     setShowAuth(open)
     if (!open && pendingAfterAuth && !retryOnceRef.current) {
@@ -149,7 +208,13 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
         return
       }
       try {
-        await handleSubmit()
+        const pendingEdit = pendingEditRef.current
+        if (pendingEdit) {
+          await handleAiAdjust(pendingEdit.instruction)
+          pendingEditRef.current = null
+        } else {
+          await handleSubmit()
+        }
       } finally {
         setPendingAfterAuth(false)
         retryOnceRef.current = false
@@ -222,6 +287,14 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       <AuthModal open={showAuth} onOpenChange={handleAuthOpenChange} />
       <CreditsModal open={showCredits} onOpenChange={setShowCredits} />
       <LogoGenTipsModal open={showTips} onOpenChange={setShowTips} />
+      <AdjustWithAiModal
+        open={showAdjust}
+        onOpenChange={setShowAdjust}
+        onConfirm={(instruction) => {
+          setShowAdjust(false)          
+          handleAiAdjust(instruction)   
+        }}
+      />
 
       {step === 0 && (
         <section className="text-center mb-2">
@@ -319,14 +392,16 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
               <button onClick={back} className="py-2 px-4 rounded border border-zinc-800 hover:bg-zinc-900">
                 Back
               </button>
-              <button
-                onClick={() => !loading && symbol.trim() && handleSubmit()}
-                disabled={!symbol.trim() || loading}
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded border border-zinc-800 disabled:opacity-60"
-              >
-                <Coins className="text-yellow-300 h-4 w-4" />
-                {loading ? 'Working…' : 'Generate Logo'}
-              </button>
+              {!firstLogo && (
+                <button
+                  onClick={() => !loading && symbol.trim() && handleSubmit()}
+                  disabled={!symbol.trim() || loading}
+                  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded border border-zinc-800 disabled:opacity-60"
+                >
+                  <Coins className="text-yellow-300 h-4 w-4" />
+                  {loading ? 'Working…' : 'Generate Logo'}
+                </button>
+              )}
             </div>
             {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
           </div>
@@ -336,14 +411,23 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       {firstLogo && (
         <section className="mt-12">
           <div className="max-w-xl mx-auto">
-            <div className="relative border border-zinc-800 rounded-lg p-4">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <button
+                onClick={() => setShowAdjust(true)}
+                className="inline-flex items-center gap-2 rounded-md bg-yellow-400 px-3 py-1.5 text-xs font-medium text-black hover:bg-yellow-300"
+              >
+                <Sparkles className="h-4 w-4" />
+                Adjust with AI
+              </button>
               <button
                 onClick={resetAll}
-                className="absolute left-1/2 -translate-x-1/2 top-2 z-10 inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
+                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500"
               >
                 <RotateCcw className="h-4 w-4" />
                 Generate another logo
               </button>
+            </div>
+            <div className="relative border border-zinc-800 rounded-lg p-4">
               <div className="aspect-square w-full">
                 <img src={firstLogo.url} alt="logo-1" className="w-full h-full object-contain bg-white" />
               </div>

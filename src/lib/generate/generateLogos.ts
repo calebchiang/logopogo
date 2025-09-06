@@ -4,6 +4,7 @@ export type GenerateLogosArgs = {
   brand: string;
   symbol: string;
   description?: string;
+  editInstruction?: string;
 };
 
 export type GenerateLogosResult = {
@@ -14,7 +15,7 @@ export type GenerateLogosResult = {
 
 const MODEL = "gpt-image-1";
 
-function buildPrompt(brand: string, symbol: string, description?: string) {
+function buildPrompt(brand: string, symbol: string, description?: string, editInstruction?: string) {
   return [
     `You are a high-quality, professional logo generator for tech companies, websites, and apps.
 Generate a clean, modern, icon-only logo for the brand "${brand}".
@@ -51,6 +52,12 @@ The logo must depict: ${symbol}.`,
 
     `NEGATIVE PROMPT:
 no text, no letters, no numbers, no typography, no words, no monograms, no mockups.`,
+
+    editInstruction && editInstruction.trim()
+      ? `MAKE THIS ADJUSTMENT:
+- ${editInstruction.trim()}
+Keep all other aspects identical unless they must change to satisfy this adjustment.`
+      : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -60,12 +67,13 @@ export async function generateLogos({
   brand,
   symbol,
   description,
+  editInstruction,
 }: GenerateLogosArgs): Promise<GenerateLogosResult> {
   if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
   if (!brand?.trim()) throw new Error("Brand is required.");
   if (!symbol?.trim()) throw new Error("Symbol description is required.");
 
-  const usedPrompt = buildPrompt(brand.trim(), symbol.trim(), description);
+  const usedPrompt = buildPrompt(brand.trim(), symbol.trim(), description, editInstruction);
 
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

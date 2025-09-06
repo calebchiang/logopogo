@@ -37,12 +37,39 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { brand, description, symbol } = body ?? {};
+    const { brand, description, symbol, parentLogoId, editInstruction } = body ?? {};
+
+    let baseBrand = brand;
+    let baseDescription = description;
+    let baseSymbol = symbol;
+
+    if (parentLogoId && editInstruction) {
+      const { data: original, error: originalError } = await supabase
+        .from("logos")
+        .select("brand_name,symbol_description,business_description,user_id")
+        .eq("id", parentLogoId)
+        .maybeSingle();
+
+      if (originalError) {
+        return NextResponse.json({ error: "Failed to fetch original logo" }, { status: 400 });
+      }
+      if (!original) {
+        return NextResponse.json({ error: "Original logo not found" }, { status: 404 });
+      }
+      if (original.user_id !== user.id) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      baseBrand = original.brand_name;
+      baseSymbol = original.symbol_description;
+      baseDescription = original.business_description ?? undefined;
+    }
 
     const { imagesB64, model, usedPrompt } = await generateLogos({
-      brand,
-      description,
-      symbol,
+      brand: baseBrand,
+      description: baseDescription,
+      symbol: baseSymbol,
+      editInstruction,
     });
 
     const uploaded: any[] = [];
@@ -63,10 +90,12 @@ export async function POST(req: Request) {
           .from("logos")
           .insert({
             user_id: user.id,
-            brand_name: brand,
-            symbol_description: symbol,
-            business_description: description,
+            brand_name: baseBrand,
+            symbol_description: baseSymbol,
+            business_description: baseDescription,
             image_path: filePath,
+            parent_logo_id: parentLogoId ?? null,
+            edit_instruction: editInstruction ?? null,
           })
           .select()
           .single();
