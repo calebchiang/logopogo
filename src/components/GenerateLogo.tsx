@@ -6,7 +6,7 @@ import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw, Sparkles } from 'lucide-react'
+import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw, Sparkles, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import AdjustWithAiModal from './AdjustWithAiModal'
 
@@ -297,15 +297,26 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
       />
 
       {step === 0 && (
-        <section className="text-center mb-2">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-            Generate <span className="rainbow-purple">High Quality</span> Logos in Seconds
-          </h1>
-          <p className="mt-3 text-zinc-400 text-lg">
-            Use LogoPogo&apos;s AI powered platform to design a logo for your apps and websites
-          </p>
-        </section>
-      )}
+  <section className="text-center mb-2">
+    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+      Generate <span className="rainbow-purple">High Quality</span> Logos in Seconds
+    </h1>
+    <p className="mt-3 text-zinc-400 text-lg">
+      Use LogoPogo&apos;s AI powered platform to design a logo for your apps and websites
+    </p>
+
+    {/* social proof pill */}
+    <div className="mt-4 flex justify-center">
+      <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 text-[11px] md:text-xs text-zinc-400">
+        <Users className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+        <span>
+          Join <span className="text-white font-medium">500+</span> creators
+        </span>
+      </span>
+    </div>
+  </section>
+)}
+
 
       <div className="p-2 md:p-8 bg-[var(--background)]">
         {creditsAlert && (
