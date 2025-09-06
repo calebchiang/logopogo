@@ -50,7 +50,7 @@ export default function ProductMockups() {
       <div className="mt-8">
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center justify-center h-12 rounded-xl px-5 bg-indigo-600 text-white border border-zinc-800 hover:bg-indigo-500"
+          className="inline-flex items-center justify-center h-12 rounded-xl px-5 bg-emerald-500 text-white border border-zinc-800 hover:bg-emerald-600"
         >
           Create an account to claim your free logo credits
         </button>
