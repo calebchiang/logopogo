@@ -12,7 +12,7 @@ export default function ProductMockups() {
     <section className="mx-auto max-w-5xl px-6 text-center mb-20">
       <AuthModal open={open} onOpenChange={setOpen} />
       <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">
-      Create <span className="italic">impactful</span> branding with zero design experience.      </h2>
+      Create impactful branding with <span className="italic">zero</span> design experience.      </h2>
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 place-items-center">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
