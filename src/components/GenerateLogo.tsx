@@ -6,7 +6,7 @@ import CreditsModal from './CreditsModal'
 import LogoGenTipsModal from './LogoGenTipsModal'
 import StripedProgressBar from './StripedProgressBar'
 import { createClient } from '@/lib/supabase/client'
-import { Download, Edit, AlertTriangle, Coins, HelpCircle, RotateCcw, Sparkles, Users } from 'lucide-react'
+import { Download, Edit, AlertTriangle, Coins, RotateCcw, Sparkles, Users, Lightbulb } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import AdjustWithAiModal from './AdjustWithAiModal'
 
@@ -366,13 +366,17 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
           <div className="grid gap-4">
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-zinc-300 text-left">Symbol Description (the more descriptive, the better quality logo)</label>
-              <button
+               <button
                 type="button"
                 onClick={() => setShowTips(true)}
-                aria-label="Tips"
-                className="inline-flex items-center rounded-full p-1.5 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                aria-label="Open tips"
+                aria-haspopup="dialog"
+                aria-expanded={showTips ? 'true' : 'false'}
+                className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-yellow-500/90 px-3 py-1.5 
+                          text-xs font-medium text-zinc-200 hover:bg-yellow-800 hover:text-white"
               >
-                <HelpCircle className="h-4 w-4" />
+                <Lightbulb className="h-4 w-4" />
+                Tips
               </button>
             </div>
             <textarea
