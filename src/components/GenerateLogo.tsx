@@ -311,8 +311,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
             Generate <span className="rainbow-purple">High Quality</span> Logos in Seconds
           </h1>
           <p className="mt-3 text-zinc-400 text-lg">
-            Use LogoPogo&apos;s AI powered platform to design a logo for your apps and websites
-          </p>
+Turn text into professional designs using our AI powered platform.        </p>
         </section>
       )}
 
