@@ -382,7 +382,7 @@ Generate high quality designs in seconds.       </p>
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               className="w-full border border-zinc-800 p-3 rounded bg-transparent"
-              placeholder="e.g. brown monkey typing on a gray laptop"
+              placeholder="e.g. A playful brown monkey typing on a sleek gray laptop. The monkey’s posture should look focused and expressive, with its hands on the keyboard as if actively working. The laptop has a modern minimalist design, slightly open and glowing softly from the screen."
               rows={3}
               required
             />
