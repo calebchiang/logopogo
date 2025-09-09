@@ -308,7 +308,7 @@ export default function GenerateLogo({ step, onStepChange }: Props) {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-            Turn your ideas into  <span className="rainbow-purple">Professional</span> Logos
+            Turn Your Ideas Into  <span className="rainbow-purple">Professional</span> Logos
           </h1>
           <p className="mt-3 text-zinc-400 text-lg">
 Generate high quality designs in seconds.       </p>
